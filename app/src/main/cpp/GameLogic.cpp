@@ -179,7 +179,7 @@ void GameLogic::spawnEnemies(float deltaTime) {
     if (spawnTimer >= 2.0f) {
         spawnTimer = 0.0f;
 
-        int enemyType = rand() % 3;
+        int enemyType = rand() % 11;
         switch (enemyType) {
             case 0: {
                 auto bi = new Bird(glm::vec2(rand() % (width_ /3) - 40 , height_), glm::vec2(40, 40),
@@ -188,14 +188,22 @@ void GameLogic::spawnEnemies(float deltaTime) {
                 enemies.push_back(bi);
                 break;
             }
-            case 1: {
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5: {
                 auto bo = new Bomber(glm::vec2(rand() % (width_ * 2/3) + width_/3 - 300, height_), glm::vec2(300, 300),
                                      glm::vec2(0.0f, -100.0f));
                 bo->setModel(&models_[0]);
                 enemies.push_back(bo);
                 break;
             }
-            case 2: {
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+            case 10: {
                 auto f = new Fighter(glm::vec2(rand() % width_ - hero->getSize().y, height_), hero->getSize(),
                                      glm::vec2(0.0f, -150.0f));
                 f->setModel(&models_[2]);
