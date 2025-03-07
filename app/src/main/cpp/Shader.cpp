@@ -129,7 +129,7 @@ void Shader::drawModel(const Model &model, float posX, float posY) const {
     glBindTexture(GL_TEXTURE_2D, model.getTexture().getTextureID());
 
     glm::mat4 mod = glm::mat4(1.0f);
-    mod = glm::translate(mod, glm::vec3(posX + 100, posY, 0.0f));
+    mod = glm::translate(mod, glm::vec3(posX, posY, 0.0f));
     //mod = glm::rotate(mod, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
     GLint md = glGetUniformLocation(program_, "model");

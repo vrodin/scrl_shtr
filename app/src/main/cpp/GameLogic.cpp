@@ -80,7 +80,6 @@ void GameLogic::render() {
         velocityX *= 0.95f;
 
         if (std::abs(velocityX) < 0.1f) velocityX = 0;
-        posX = std::max(std::min(posX, (float)width_ - 100.0f), 0.0f);
     }
 
     updateRenderArea();
@@ -94,7 +93,7 @@ void GameLogic::render() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     hero->render();
-    hero->setX(posX);
+    hero->setX(std::max(std::min(posX, (float)width_ - 200.0f), 0.0f));
     shader_->drawModel(*hero->getModel(), (float)hero->getPosition().x, (float)hero->getPosition().y);
     for(auto &bullet : hero->getBullets()) {
         bullet->render();
@@ -183,21 +182,21 @@ void GameLogic::spawnEnemies(float deltaTime) {
         int enemyType = rand() % 3;
         switch (enemyType) {
             case 0: {
-                auto bi = new Bird(glm::vec2(rand() % width_, height_), glm::vec2(40, 40),
+                auto bi = new Bird(glm::vec2(rand() % (width_ /3) - 40 , height_), glm::vec2(40, 40),
                          glm::vec2(10.0f, -30.0f));
                 bi->setModel(&models_[3]);
                 enemies.push_back(bi);
                 break;
             }
             case 1: {
-                auto bo = new Bomber(glm::vec2(rand() % width_, height_), glm::vec2(300, 300),
+                auto bo = new Bomber(glm::vec2(rand() % (width_ * 2/3) + width_/3 - 300, height_), glm::vec2(300, 300),
                                      glm::vec2(0.0f, -100.0f));
                 bo->setModel(&models_[0]);
                 enemies.push_back(bo);
                 break;
             }
             case 2: {
-                auto f = new Fighter(glm::vec2(rand() % width_, height_), hero->getSize(),
+                auto f = new Fighter(glm::vec2(rand() % width_ - hero->getSize().y, height_), hero->getSize(),
                                      glm::vec2(0.0f, -150.0f));
                 f->setModel(&models_[2]);
                 enemies.push_back(f);
