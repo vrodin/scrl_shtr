@@ -23,13 +23,12 @@ GameLogic::GameLogic(android_app *pApp) : score_(0), gameState(GameState::Playin
     initRenderer();
     updateRenderArea();
     hero = new Hero(glm::vec2(width_/2, height_/3), glm::vec2(200, 200));
-    hero->setModel(&models_[1]);
+    hero->setModel(models_[1]);
+    initButtons();
 }
 
 GameLogic::~GameLogic() {
-    for(auto bullet : hero->getBullets()) {
-        delete bullet;
-    }
+    hero->getBullets().clear();
 
     delete hero;
 
@@ -59,6 +58,9 @@ GameLogic::~GameLogic() {
 
 void GameLogic::update(float deltaTime) {
     if (gameState != GameState::Playing) {
+        for(auto& button: buttons) {
+            button->update(deltaTime);
+        }
         return;
     }
 
@@ -92,27 +94,45 @@ void GameLogic::render() {
 
     glClear(GL_COLOR_BUFFER_BIT);
 
-    hero->render();
-    hero->setX(std::max(std::min(posX, (float)width_ - 200.0f), 0.0f));
-    shader_->drawModel(*hero->getModel(), (float)hero->getPosition().x, (float)hero->getPosition().y);
-    for(auto &bullet : hero->getBullets()) {
-        bullet->render();
-        //shader_->drawModel(*bullet->getModel(), (float)bullet->getPosition().x, (float)bullet->getPosition().y);
-        shader_->drawModel(models_[4], (float)bullet->getPosition().x, (float)bullet->getPosition().y);
-    }
+    if(gameState == GameState::Playing) {
+        hero->render();
+        hero->setX(std::max(std::min(posX, (float) width_ - 200.0f), 0.0f));
+        shader_->drawModel(*hero->getModel(), (float) hero->getPosition().x,
+                           (float) hero->getPosition().y);
+        for (auto &bullet: hero->getBullets()) {
+            bullet->render();
+            //shader_->drawModel(*bullet->getModel(), (float)bullet->getPosition().x, (float)bullet->getPosition().y);
+            shader_->drawModel(*(models_[4].get()), (float) bullet->getPosition().x,
+                               (float) bullet->getPosition().y);
+        }
 
-    for (auto& enemy : enemies) {
-        enemy->render();
-        shader_->drawModel(*enemy->getModel(), (float)enemy->getPosition().x, (float)enemy->getPosition().y);
-        if(auto *fighter = dynamic_cast<Fighter*>(enemy)) {
-            for (auto &bullet: fighter->getBullets())
-                shader_->drawModel(models_[4], (float)bullet->getPosition().x, (float)bullet->getPosition().y);
+        for (auto &enemy: enemies) {
+            enemy->render();
+            shader_->drawModel(*enemy->getModel(), (float) enemy->getPosition().x,
+                               (float) enemy->getPosition().y);
+            if (auto *fighter = dynamic_cast<Fighter *>(enemy)) {
+                for (auto &bullet: fighter->getBullets())
+                    shader_->drawModel(*(models_[4].get()), (float) bullet->getPosition().x,
+                                       (float) bullet->getPosition().y);
+            }
+        }
+
+        shader_->deactivate();
+        fontRenderer->setProjectionMatrix(glm::ortho(0.0f, (float)width_, 0.0f, (float)height_ , -1.0f, 1.0f));
+    } else {
+        fontRenderer->setProjectionMatrix(glm::ortho(0.0f, (float)width_, 0.0f, (float)height_ , -1.0f, 1.0f));
+        for (auto &button: buttons) {
+            button->render();
+            shader_->activate();
+            shader_->drawModel(*button->getModel(), (float) button->getPosition().x,
+                               (float) button->getPosition().y);
+            shader_->deactivate();
+
+            fontRenderer->RenderText(button->getText(), button->getPosition().x + 80, button->getPosition().y + 250, 2.0f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
         }
     }
 
-    shader_->deactivate();
-
-    fontRenderer->setProjectionMatrix(glm::ortho(0.0f, (float)width_, 0.0f, (float)height_ , -1.0f, 1.0f));
     fontRenderer->RenderText(std::to_string(score_), 120.0f, 100.0f, 2.0f, glm::vec4(0.8f, 0.0f, 0.0f, 1.0f));
 
     auto swapResult = eglSwapBuffers(display_, surface_);
@@ -138,7 +158,7 @@ void GameLogic::checkCollisions() {
 
     for (auto& bullet : hero->getBullets()) {
         for (auto& enemy : enemies) {
-            if (!enemy->isImmortal() && isColliding(bullet, enemy)) {
+            if (!enemy->isImmortal() && isColliding(bullet.get(), enemy)) {
                 handleBulletCollision(bullet, enemy);
                 break;
             }
@@ -162,9 +182,8 @@ void GameLogic::handlePlayerCollision() {
     //animation and sound boom
 }
 
-void GameLogic::handleBulletCollision(Bullet* bullet, BaseObject* enemy) {
-    std::remove(hero->getBullets().begin(), hero->getBullets().end(), bullet);
-    delete bullet;
+void GameLogic::handleBulletCollision(std::shared_ptr<Bullet> bullet, BaseObject* enemy) {
+    hero->getBullets().erase(std::remove(hero->getBullets().begin(), hero->getBullets().end(), bullet),hero->getBullets().end());
 
     enemies.erase(std::remove(enemies.begin(), enemies.end(), enemy), enemies.end());
 
@@ -184,7 +203,7 @@ void GameLogic::spawnEnemies(float deltaTime) {
             case 0: {
                 auto bi = new Bird(glm::vec2(rand() % (width_ /3) - 40 , height_), glm::vec2(40, 40),
                          glm::vec2(0.0f, -30.0f));
-                bi->setModel(&models_[3]);
+                bi->setModel(models_[3]);
                 enemies.push_back(bi);
                 break;
             }
@@ -195,7 +214,7 @@ void GameLogic::spawnEnemies(float deltaTime) {
             case 5: {
                 auto bo = new Bomber(glm::vec2(rand() % (width_ * 2/3) + width_/3 - 300, height_), glm::vec2(300, 300),
                                      glm::vec2(0.0f, -100.0f));
-                bo->setModel(&models_[0]);
+                bo->setModel(models_[0]);
                 enemies.push_back(bo);
                 break;
             }
@@ -206,7 +225,7 @@ void GameLogic::spawnEnemies(float deltaTime) {
             case 10: {
                 auto f = new Fighter(glm::vec2(rand() % width_ - hero->getSize().y, height_), hero->getSize(),
                                      glm::vec2(0.0f, -150.0f));
-                f->setModel(&models_[2]);
+                f->setModel(models_[2]);
                 enemies.push_back(f);
 
                 break;
@@ -215,10 +234,35 @@ void GameLogic::spawnEnemies(float deltaTime) {
     }
 }
 
+void GameLogic::initButtons() {
+    //хорошо бы все константы вынести в дефайны или считывать из какого-нибудь файла
+
+    float y_position = (height_ - 600.0f) / 2;
+    float x_position = (width_ - 420) / 2;
+    auto model = createModel(200.0f, 600.0f, TextureAsset::loadAsset(app_->activity->assetManager, "button.png"));
+
+    auto firstButton = new Button(glm::vec2(0, -600), glm::vec2(200, 600));
+    firstButton->setModel(model);
+    firstButton->setStopPosition({x_position, y_position});
+    firstButton->setText("AGAIN");
+    buttons.emplace_back(firstButton);
+    auto secondButton = new Button(glm::vec2((float)width_ - 200.0f, (float)height_), glm::vec2(600, 200));
+    secondButton->setStopPosition({x_position + 220, y_position});
+    secondButton->setModel(model);
+    secondButton->setText("DONE");
+    buttons.emplace_back(secondButton);
+}
+
+void GameLogic::resetButtons() {
+    buttons.front()->setPosition(glm::vec2(0, -600));
+    buttons.back()->setPosition(glm::vec2((float)width_ + 200, (float)height_));
+}
+
 void GameLogic::reset() {
     // Сброс игры
     score_ = 0;
     gameState = GameState::Playing;
+    resetButtons();
 
     // Удаление всех врагов и пуль
     for (auto& enemy : enemies) {
@@ -366,7 +410,6 @@ void GameLogic::initRenderer() {
 
     fontRenderer = std::make_shared<FontRenderer>(app_->activity->assetManager, "font.ttf", 48 );
 
-
     glClearColor(CORNFLOWER_BLUE);
 
     glEnable(GL_BLEND);
@@ -377,11 +420,11 @@ void GameLogic::initRenderer() {
 
 void GameLogic::createModels() {
     auto assetManager = app_->activity->assetManager;
-    models_.emplace_back(*createModel(300.0f, 300.0f, TextureAsset::loadAsset(assetManager, "bfl.png")));
-    models_.emplace_back(*createModel(200.0f, 200.0f, TextureAsset::loadAsset(assetManager, "fl.png")));
-    models_.emplace_back(*createModel(200.0f, 200.0f, TextureAsset::loadAsset(assetManager, "fl2.png")));
-    models_.emplace_back(*createModel(40.0f, 40.0f, TextureAsset::loadAsset(assetManager, "bird.png")));
-    models_.emplace_back(*createModel(5.0f, 10.0f, TextureAsset::loadAsset(assetManager, "bullet.png")));
+    models_.emplace_back(createModel(300.0f, 300.0f, TextureAsset::loadAsset(assetManager, "bfl.png")));
+    models_.emplace_back(createModel(200.0f, 200.0f, TextureAsset::loadAsset(assetManager, "fl.png")));
+    models_.emplace_back(createModel(200.0f, 200.0f, TextureAsset::loadAsset(assetManager, "fl2.png")));
+    models_.emplace_back(createModel(40.0f, 40.0f, TextureAsset::loadAsset(assetManager, "bird.png")));
+    models_.emplace_back(createModel(5.0f, 10.0f, TextureAsset::loadAsset(assetManager, "bullet.png")));
 
 }
 

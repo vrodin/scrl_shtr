@@ -31,9 +31,9 @@ public:
 
     bool shouldBeRemoved() const { return shouldRemove; }
 
-    void setModel(Model *mod) {model = mod;}
+    void setModel(std::shared_ptr<Model> mod) {model = mod;}
 
-    Model* getModel() {return model;}
+    Model* getModel() {return model.get();}
 
     bool isImmortal() {return immortal;}
 
@@ -42,7 +42,7 @@ protected:
     glm::vec2 size;
     glm::vec2 velocity;
     bool shouldRemove;
-    Model *model;
+    std::shared_ptr<Model> model;
     bool immortal = false;
 };
 

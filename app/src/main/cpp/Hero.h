@@ -6,7 +6,7 @@
 #define VRODIN_S_SCRL_SHTER_HERO_H
 #include "BaseObject.h"
 #include "Bullet.h"
-#include <vector>
+#include <list>
 
 class Hero : public BaseObject {
 public:
@@ -19,7 +19,7 @@ public:
     void takeDamage(int damage);
 
     void setX(int x) {position.x = x;}
-    std::vector<Bullet*>& getBullets();
+    std::list<std::shared_ptr<Bullet>>& getBullets();
     int getHealth() const;
     void setHealth(int health);
 
@@ -28,6 +28,6 @@ private:
     float fireCooldown;
     float fireInterval;
     bool shouldRemove;
-    std::vector<Bullet*> bullets;
+    std::list<std::shared_ptr<Bullet>> bullets;
 };
 #endif //VRODIN_S_SCRL_SHTER_HERO_H

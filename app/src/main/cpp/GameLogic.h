@@ -8,6 +8,7 @@
 #include <list>
 #include "Hero.h"
 #include "Bullet.h"
+#include "Button.h"
 #include "BaseObject.h"
 #include <EGL/egl.h>
 #include <glm/glm.hpp>
@@ -75,13 +76,16 @@ private:
     void updateRenderArea();
     void checkCollisions();
     void handlePlayerCollision();
-    void handleBulletCollision(Bullet* bullet, BaseObject* enemy);
+    void handleBulletCollision(std::shared_ptr<Bullet> bullet, BaseObject* enemy);
     bool isColliding(BaseObject* obj1, BaseObject* obj2);
     void cleanupObjects();
     void spawnEnemies(float deltaTime);
+    void initButtons();
+    void resetButtons();
     uint32_t score_;
     Hero *hero;
     std::list<BaseObject*> enemies;
+    std::list<Button*> buttons;
     GameState gameState;
 
     static std::shared_ptr<Model> createModel(float x, float y, const std::shared_ptr<TextureAsset>& texture);
@@ -96,7 +100,7 @@ private:
     bool shaderNeedsNewProjectionMatrix_;
 
     std::unique_ptr<Shader> shader_;
-    std::vector<Model> models_;
+    std::vector<std::shared_ptr<Model>> models_;
 
     bool isScrolling;
     float lastX;

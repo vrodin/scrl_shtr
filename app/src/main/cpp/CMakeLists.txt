@@ -16,6 +16,7 @@ add_library(shooter SHARED
         Fighter.cpp
         GameLogic.cpp
         Hero.cpp
+        Button.cpp
 )
 
 find_package(game-activity REQUIRED CONFIG)

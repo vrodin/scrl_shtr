@@ -36,7 +36,7 @@ void Hero::fireBullet() {
         glm::vec2 bulletSize = glm::vec2(10, 5);
         glm::vec2 bulletVelocity = glm::vec2(0.0f, 200.0f);
 
-        bullets.push_back(new Bullet(bulletPosition, bulletSize, bulletVelocity));
+        bullets.push_back(std::make_shared<Bullet>(bulletPosition, bulletSize, bulletVelocity));
 
         fireCooldown = fireInterval;
     }
@@ -49,7 +49,7 @@ void Hero::takeDamage(int damage) {
     }
 }
 
-std::vector<Bullet*>& Hero::getBullets() {
+std::list<std::shared_ptr<Bullet>>& Hero::getBullets() {
     return bullets;
 }
 
