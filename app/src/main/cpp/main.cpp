@@ -38,6 +38,7 @@ void android_main(struct android_app *pApp) {
     android_app_set_motion_event_filter(pApp, motion_event_filter_func);
 
     auto lastFrameTime = std::chrono::high_resolution_clock::now();
+    float speedCoef = 1.0f;
     do {
         bool done = false;
         while (!done) {
@@ -64,6 +65,7 @@ void android_main(struct android_app *pApp) {
             }
         }
 
+
         if (pApp->userData) {
             auto *pEngine = reinterpret_cast<GameLogic *>(pApp->userData);
 
@@ -74,8 +76,9 @@ void android_main(struct android_app *pApp) {
             lastFrameTime = currentTime;
 
             pEngine->handleInput();
-            pEngine->update(deltaTime);
+            pEngine->update(deltaTime * speedCoef);
             pEngine->render();
+            speedCoef+= deltaTime * 0.01f ;
         }
     } while (!pApp->destroyRequested);
 }
