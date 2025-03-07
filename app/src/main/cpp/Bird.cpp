@@ -7,16 +7,18 @@
 
 Bird::Bird(glm::vec2 position, glm::vec2 size, glm::vec2 velocity)
         : BaseObject(position, size, velocity), time(0.0f) {
-    initialX = position.y;
+    initialX = position.x;
     frequency = 1.0f;
+    immortal = true;
+    amplitude = 20.0f + (float)(std::rand() % 30);
 }
 
 void Bird::update(float deltaTime) {
     time += deltaTime;
 
-    float newX = initialX + (20.0f + (float)(std::rand() % 30)) * std::sin(frequency * time);
+    float newX = initialX + amplitude * std::sin(frequency * time);
 
-    setPosition(glm::vec2(getPosition().y + getVelocity().y * deltaTime, newX));
+    setPosition(glm::vec2(newX, getPosition().y + getVelocity().y * deltaTime));
 
     if (getPosition().y + getSize().y < 0) {
         markForRemoval();

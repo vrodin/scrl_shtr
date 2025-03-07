@@ -18,5 +18,6 @@ private:
     float initialX;
     float frequency;
     bool shouldRemove;
+    float amplitude;
 };
 #endif //VRODIN_S_SCRL_SHTER_BIRD_H

@@ -138,7 +138,7 @@ void GameLogic::checkCollisions() {
 
     for (auto& bullet : hero->getBullets()) {
         for (auto& enemy : enemies) {
-            if (isColliding(bullet, enemy)) {
+            if (!enemy->isImmortal() && isColliding(bullet, enemy)) {
                 handleBulletCollision(bullet, enemy);
                 break;
             }
@@ -183,7 +183,7 @@ void GameLogic::spawnEnemies(float deltaTime) {
         switch (enemyType) {
             case 0: {
                 auto bi = new Bird(glm::vec2(rand() % (width_ /3) - 40 , height_), glm::vec2(40, 40),
-                         glm::vec2(10.0f, -30.0f));
+                         glm::vec2(0.0f, -30.0f));
                 bi->setModel(&models_[3]);
                 enemies.push_back(bi);
                 break;

@@ -35,12 +35,15 @@ public:
 
     Model* getModel() {return model;}
 
+    bool isImmortal() {return immortal;}
+
 protected:
     glm::vec2 position;
     glm::vec2 size;
     glm::vec2 velocity;
     bool shouldRemove;
     Model *model;
+    bool immortal = false;
 };
 
 #endif // VRODIN_S_SCRL_SHTER_BASEOBJECT_H
