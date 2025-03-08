@@ -9,10 +9,10 @@ Fighter::Fighter(glm::vec2 position, glm::vec2 size, glm::vec2 velocity)
 }
 
 void Fighter::update(float deltaTime) {
+    setPosition(getPosition() + getVelocity() * deltaTime);
+
     for(auto &bullet : getBullets())
         bullet->update(deltaTime);
-
-    setPosition(getPosition() + getVelocity() * deltaTime);
 
     fireCooldown -= deltaTime;
     if (fireCooldown <= 0.0f) {
@@ -26,10 +26,13 @@ void Fighter::update(float deltaTime) {
 }
 
 void Fighter::render() const {
-    // Отрисовка истребителя (например, прямоугольник или спрайт)
-    // Здесь можно использовать OpenGL для отрисовки примитивов
-    // Например:
-    // drawRectangle(getPosition(), getSize());
+    shader->activate();
+    shader->drawModel(*model, (float) getPosition().x,
+                      (float) getPosition().y);
+    for(auto& bullet : bullets) {
+        bullet->render();
+    }
+    shader->deactivate();
 }
 
 void Fighter::fireBullet() {
@@ -37,7 +40,10 @@ void Fighter::fireBullet() {
     glm::vec2 bulletSize = glm::vec2(5, 10);
     glm::vec2 bulletVelocity = glm::vec2(0.0f, -200.0f);
 
-    bullets.push_back(new Bullet(bulletPosition, bulletSize, bulletVelocity));
+    auto bullet = new Bullet(bulletPosition, bulletSize, bulletVelocity);
+    bullet->setShader(shader);
+    bullet->setModel(bulletModel);
+    bullets.emplace_back(bullet);
 }
 
 void Fighter::takeDamage(int damage) {

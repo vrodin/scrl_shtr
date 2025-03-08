@@ -16,10 +16,10 @@ void Bullet::update(float deltaTime) {
 }
 
 void Bullet::render() const {
-    // Отрисовка пули (например, прямоугольник или спрайт)
-    // Здесь можно использовать OpenGL для отрисовки примитивов
-    // Например:
-    // drawRectangle(getPosition(), getSize());
+    shader->activate();
+    shader->drawModel(*model, (float) getPosition().x,
+                       (float) getPosition().y);
+    shader->deactivate();
 }
 
 int Bullet::getDamage() const {

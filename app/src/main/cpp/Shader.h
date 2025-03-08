@@ -9,7 +9,7 @@ class Model;
 
 class Shader {
 public:
-    static Shader *loadShader(
+    static Shader* loadShader(
             const std::string &vertexSource,
             const std::string &fragmentSource,
             const std::string &positionAttributeName,

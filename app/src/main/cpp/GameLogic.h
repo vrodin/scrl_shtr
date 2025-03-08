@@ -65,7 +65,8 @@ public:
     void update(float deltaTime);
     void render();
     GameState getGameState() const {return gameState; }
-    void reset();
+    bool reset();
+    bool terminateApp();
     uint32_t getScore() const {return score_;}
 
     void handleInput();
@@ -88,7 +89,7 @@ private:
     std::list<Button*> buttons;
     GameState gameState;
 
-    static std::shared_ptr<Model> createModel(float x, float y, const std::shared_ptr<TextureAsset>& texture);
+    static std::unique_ptr<Model> createModel(float x, float y, const std::shared_ptr<TextureAsset>& texture);
 
     android_app *app_;
     EGLDisplay display_;
@@ -100,12 +101,13 @@ private:
     bool shaderNeedsNewProjectionMatrix_;
 
     std::unique_ptr<Shader> shader_;
-    std::vector<std::shared_ptr<Model>> models_;
+    std::vector<std::unique_ptr<Model>> models_;
 
     bool isScrolling;
-    float lastX;
+    float lastX, lastY, releaseX, releaseY;
     float velocityX;
-    float posX = 0, posY;
+    float posX = 0;
+    float speed = 1.0f;
 
     glm::mat4 projection;
 

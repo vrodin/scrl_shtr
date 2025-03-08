@@ -3,6 +3,7 @@
 
 #include <glm/glm.hpp>
 #include "Model.h"
+#include "Shader.h"
 
 class BaseObject {
 public:
@@ -31,9 +32,9 @@ public:
 
     bool shouldBeRemoved() const { return shouldRemove; }
 
-    void setModel(std::shared_ptr<Model> mod) {model = mod;}
+    void setModel(Model* mod) {model = mod;}
 
-    Model* getModel() {return model.get();}
+    void setShader(Shader* shader) { this->shader = shader; }
 
     bool isImmortal() {return immortal;}
 
@@ -42,7 +43,8 @@ protected:
     glm::vec2 size;
     glm::vec2 velocity;
     bool shouldRemove;
-    std::shared_ptr<Model> model;
+    Model* model;
+    Shader* shader;
     bool immortal = false;
 };
 

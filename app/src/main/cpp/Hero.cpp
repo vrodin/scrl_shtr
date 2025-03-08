@@ -24,10 +24,13 @@ void Hero::update(float deltaTime) {
 }
 
 void Hero::render() const {
-    // Отрисовка игрока (например, прямоугольник или спрайт)
-    // Здесь можно использовать OpenGL для отрисовки примитивов
-    // Например:
-    // drawRectangle(getPosition(), getSize());
+    shader->activate();
+    shader->drawModel(*model, (float) getPosition().x,
+                       (float) getPosition().y);
+    for(auto& bullet : bullets) {
+        bullet->render();
+    }
+    shader->deactivate();
 }
 
 void Hero::fireBullet() {
@@ -36,7 +39,10 @@ void Hero::fireBullet() {
         glm::vec2 bulletSize = glm::vec2(10, 5);
         glm::vec2 bulletVelocity = glm::vec2(0.0f, 200.0f);
 
-        bullets.push_back(std::make_shared<Bullet>(bulletPosition, bulletSize, bulletVelocity));
+        auto bullet = std::make_shared<Bullet>(bulletPosition, bulletSize, bulletVelocity);
+        bullet->setShader(shader);
+        bullet->setModel(bulletModel);
+        bullets.push_back(bullet);
 
         fireCooldown = fireInterval;
     }

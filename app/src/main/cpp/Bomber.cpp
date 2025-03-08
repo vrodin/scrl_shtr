@@ -16,10 +16,10 @@ void Bomber::update(float deltaTime) {
 }
 
 void Bomber::render() const {
-    // Отрисовка бомбардировщика (например, прямоугольник или спрайт)
-    // Здесь можно использовать OpenGL для отрисовки примитивов
-    // Например:
-    // drawRectangle(getPosition(), getSize());
+    shader->activate();
+    shader->drawModel(*model, (float) getPosition().x,
+                      (float) getPosition().y);
+    shader->deactivate();
 }
 
 void Bomber::takeDamage(int damage) {

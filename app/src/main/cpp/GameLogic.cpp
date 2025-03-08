@@ -7,6 +7,7 @@
 #include <memory>
 #include <vector>
 #include <android/imagedecoder.h>
+#include <android/native_activity.h>
 
 #include "GameLogic.h"
 #include "Hero.h"
@@ -23,7 +24,9 @@ GameLogic::GameLogic(android_app *pApp) : score_(0), gameState(GameState::Playin
     initRenderer();
     updateRenderArea();
     hero = new Hero(glm::vec2(width_/2, height_/3), glm::vec2(200, 200));
-    hero->setModel(models_[1]);
+    hero->setModel(models_[1].get());
+    hero->setBulletModel(models_[4].get());
+    hero->setShader(shader_.get());
     initButtons();
 }
 
@@ -57,6 +60,8 @@ GameLogic::~GameLogic() {
 }
 
 void GameLogic::update(float deltaTime) {
+    speed+= deltaTime * 0.01f ;
+    deltaTime *= speed;
     if (gameState != GameState::Playing) {
         for(auto& button: buttons) {
             button->update(deltaTime);
@@ -95,39 +100,22 @@ void GameLogic::render() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     if(gameState == GameState::Playing) {
-        hero->render();
         hero->setX(std::max(std::min(posX, (float) width_ - 200.0f), 0.0f));
-        shader_->drawModel(*hero->getModel(), (float) hero->getPosition().x,
-                           (float) hero->getPosition().y);
-        for (auto &bullet: hero->getBullets()) {
-            bullet->render();
-            //shader_->drawModel(*bullet->getModel(), (float)bullet->getPosition().x, (float)bullet->getPosition().y);
-            shader_->drawModel(*(models_[4].get()), (float) bullet->getPosition().x,
-                               (float) bullet->getPosition().y);
-        }
+        hero->render();
 
         for (auto &enemy: enemies) {
             enemy->render();
-            shader_->drawModel(*enemy->getModel(), (float) enemy->getPosition().x,
-                               (float) enemy->getPosition().y);
-            if (auto *fighter = dynamic_cast<Fighter *>(enemy)) {
-                for (auto &bullet: fighter->getBullets())
-                    shader_->drawModel(*(models_[4].get()), (float) bullet->getPosition().x,
-                                       (float) bullet->getPosition().y);
-            }
         }
 
-        shader_->deactivate();
         fontRenderer->setProjectionMatrix(glm::ortho(0.0f, (float)width_, 0.0f, (float)height_ , -1.0f, 1.0f));
     } else {
         fontRenderer->setProjectionMatrix(glm::ortho(0.0f, (float)width_, 0.0f, (float)height_ , -1.0f, 1.0f));
         for (auto &button: buttons) {
             button->render();
-            shader_->activate();
-            shader_->drawModel(*button->getModel(), (float) button->getPosition().x,
-                               (float) button->getPosition().y);
-            shader_->deactivate();
-
+            if( button->isPointInsideButton(glm::vec2(releaseX,releaseY))) {
+                button->exec();
+                releaseX = 0;
+            }
             fontRenderer->RenderText(button->getText(), button->getPosition().x + 80, button->getPosition().y + 250, 2.0f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
         }
@@ -198,12 +186,13 @@ void GameLogic::spawnEnemies(float deltaTime) {
     if (spawnTimer >= 2.0f) {
         spawnTimer = 0.0f;
 
-        int enemyType = rand() % 11;
+        int enemyType = rand() % 14;
         switch (enemyType) {
             case 0: {
                 auto bi = new Bird(glm::vec2(rand() % (width_ /3) - 40 , height_), glm::vec2(40, 40),
                          glm::vec2(0.0f, -30.0f));
-                bi->setModel(models_[3]);
+                bi->setModel(models_[3].get());
+                bi->setShader(shader_.get());
                 enemies.push_back(bi);
                 break;
             }
@@ -214,7 +203,8 @@ void GameLogic::spawnEnemies(float deltaTime) {
             case 5: {
                 auto bo = new Bomber(glm::vec2(rand() % (width_ * 2/3) + width_/3 - 300, height_), glm::vec2(300, 300),
                                      glm::vec2(0.0f, -100.0f));
-                bo->setModel(models_[0]);
+                bo->setModel(models_[0].get());
+                bo->setShader(shader_.get());
                 enemies.push_back(bo);
                 break;
             }
@@ -222,10 +212,15 @@ void GameLogic::spawnEnemies(float deltaTime) {
             case 7:
             case 8:
             case 9:
-            case 10: {
-                auto f = new Fighter(glm::vec2(rand() % width_ - hero->getSize().y, height_), hero->getSize(),
+            case 10:
+            case 11:
+            case 12:
+            case 13: {
+                auto f = new Fighter(glm::vec2(rand() % width_, height_), hero->getSize(),
                                      glm::vec2(0.0f, -150.0f));
-                f->setModel(models_[2]);
+                f->setModel(models_[2].get());
+                f->setBulletModel(models_[4].get());
+                f->setShader(shader_.get());
                 enemies.push_back(f);
 
                 break;
@@ -239,18 +234,22 @@ void GameLogic::initButtons() {
 
     float y_position = (height_ - 600.0f) / 2;
     float x_position = (width_ - 420) / 2;
-    auto model = createModel(200.0f, 600.0f, TextureAsset::loadAsset(app_->activity->assetManager, "button.png"));
-
+    models_.emplace_back(createModel(200.0f, 600.0f, TextureAsset::loadAsset(app_->activity->assetManager, "button.png")));
     auto firstButton = new Button(glm::vec2(0, -600), glm::vec2(200, 600));
-    firstButton->setModel(model);
+    firstButton->setModel(models_.back().get());
     firstButton->setStopPosition({x_position, y_position});
     firstButton->setText("AGAIN");
+    firstButton->setFunc(std::bind(&GameLogic::reset, this));
+    firstButton->setShader(shader_.get());
     buttons.emplace_back(firstButton);
     auto secondButton = new Button(glm::vec2((float)width_ - 200.0f, (float)height_), glm::vec2(600, 200));
     secondButton->setStopPosition({x_position + 220, y_position});
-    secondButton->setModel(model);
+    secondButton->setModel(models_.back().get());
     secondButton->setText("DONE");
+    secondButton->setFunc(std::bind(&GameLogic::terminateApp, this));
+    secondButton->setShader(shader_.get());
     buttons.emplace_back(secondButton);
+
 }
 
 void GameLogic::resetButtons() {
@@ -258,11 +257,19 @@ void GameLogic::resetButtons() {
     buttons.back()->setPosition(glm::vec2((float)width_ + 200, (float)height_));
 }
 
-void GameLogic::reset() {
+bool GameLogic::terminateApp() {
+    exit(0);
+    //ANativeActivity_finish(reinterpret_cast<ANativeActivity *>(app_->activity));
+    return 1;
+}
+
+bool GameLogic::reset() {
     // Сброс игры
     score_ = 0;
+    speed = 1.0f;
     gameState = GameState::Playing;
-    resetButtons();
+    buttons.front()->setPosition(glm::vec2(0, -600));
+    buttons.back()->setPosition(glm::vec2((float)width_ + 200, (float)height_));
 
     // Удаление всех врагов и пуль
     for (auto& enemy : enemies) {
@@ -278,6 +285,8 @@ void GameLogic::reset() {
     // Сброс состояния игрока
     hero->setPosition(glm::vec2(100, 300));
     hero->setHealth(1);
+
+    return 1;
 }
 
 void GameLogic::cleanupObjects() {
@@ -326,6 +335,7 @@ void GameLogic::handleInput() {
                 if (isScrolling) {
                     velocityX = x - lastX;
                     lastX = x;
+                    lastY = y;
                     posX += velocityX;
                     posX = std::max(std::min(posX, (float)width_ - 100.0f), 0.0f);
                 }
@@ -333,6 +343,8 @@ void GameLogic::handleInput() {
             case AMOTION_EVENT_ACTION_UP:
             case AMOTION_EVENT_ACTION_POINTER_UP:
                 isScrolling = false;
+                releaseX = lastX;
+                releaseY = lastY;
                 break;
             default:
                 aout << "Unknown MotionEvent Action: " << action;
@@ -428,8 +440,8 @@ void GameLogic::createModels() {
 
 }
 
-std::shared_ptr<Model> GameLogic::createModel(float x, float y, const std::shared_ptr<TextureAsset>& texture) {
-    return std::make_shared<Model> (
+std::unique_ptr<Model> GameLogic::createModel(float x, float y, const std::shared_ptr<TextureAsset>& texture) {
+    return std::make_unique<Model> (
             std::vector<float>{
                     // Позиции         // Текстурные координаты
                     0.0f, y,        0.0f, 1.0f, // верхняя правая

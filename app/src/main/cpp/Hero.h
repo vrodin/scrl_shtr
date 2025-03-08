@@ -22,6 +22,7 @@ public:
     std::list<std::shared_ptr<Bullet>>& getBullets();
     int getHealth() const;
     void setHealth(int health);
+    void setBulletModel(Model* model) {bulletModel = model;}
 
 private:
     int health;
@@ -29,5 +30,6 @@ private:
     float fireInterval;
     bool shouldRemove;
     std::list<std::shared_ptr<Bullet>> bullets;
+    Model* bulletModel;
 };
 #endif //VRODIN_S_SCRL_SHTER_HERO_H

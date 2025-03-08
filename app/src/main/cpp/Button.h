@@ -5,6 +5,9 @@
 #ifndef VRODIN_S_SCRL_SHTER_BUTTON_H
 #define VRODIN_S_SCRL_SHTER_BUTTON_H
 #include "BaseObject.h"
+#include <functional>
+#include <atomic>
+
 
 class Button : public BaseObject {
 public:
@@ -15,11 +18,13 @@ public:
     void setStopPosition(glm::vec2 stopPosition);
     void setText(std::string text) { this->text = std::move(text); }
     std::string getText() { return this->text; }
+    void setFunc(std::function<bool()> f) { this->f = std::move(f); }
+    void exec() { this->f(); }
+    bool isPointInsideButton(glm::vec2 pos);
 
 private:
     glm::vec2 stopPosition;
-    float maxSpeed = 200.0f;
-    float acceleration = 100.0f;
     std::string text;
+    std::function<bool()> f;
 };
 #endif //VRODIN_S_SCRL_SHTER_BUTTON_H

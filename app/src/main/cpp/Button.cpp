@@ -28,13 +28,23 @@ void Button::update(float deltaTime) {
 }
 
 void Button::render() const {
-    // Отрисовка кнопки (например, треугольник или спрайт)
-    // Здесь можно использовать OpenGL для отрисовки примитивов
-    // Например:
-    // drawTriangle(getPosition(), getSize());
+    shader->activate();
+    shader->drawModel(*model, (float) getPosition().x,
+                      (float) getPosition().y);
+    shader->deactivate();
 }
 
 void Button::setStopPosition(glm::vec2 stopPosition)
 {
     this->stopPosition = stopPosition;
+}
+
+bool Button::isPointInsideButton(glm::vec2 pos) {
+    float buttonLeft = getPosition().x;
+    float buttonRight = buttonLeft + getSize().x;
+    float buttonTop = getPosition().y;
+    float buttonBottom = buttonTop + getSize().y;
+
+    return (pos.x >= buttonLeft && pos.x <= buttonRight &&
+            pos.y >= buttonTop && pos.y <= buttonBottom);
 }

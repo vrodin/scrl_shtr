@@ -26,8 +26,8 @@ void Bird::update(float deltaTime) {
 }
 
 void Bird::render() const {
-    // Отрисовка птицы (например, треугольник или спрайт)
-    // Здесь можно использовать OpenGL для отрисовки примитивов
-    // Например:
-    // drawTriangle(getPosition(), getSize());
+    shader->activate();
+    shader->drawModel(*model, (float) getPosition().x,
+                      (float) getPosition().y);
+    shader->deactivate();
 }
