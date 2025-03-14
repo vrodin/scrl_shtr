@@ -21,10 +21,11 @@ public:
     void setFunc(std::function<bool()> f) { this->f = std::move(f); }
     void exec() { this->f(); }
     bool isPointInsideButton(glm::vec2 pos);
-
+    bool isFlyEnd() { return flyEnd;};
 private:
     glm::vec2 stopPosition;
     std::string text;
     std::function<bool()> f;
+    bool flyEnd = false;
 };
 #endif //VRODIN_S_SCRL_SHTER_BUTTON_H

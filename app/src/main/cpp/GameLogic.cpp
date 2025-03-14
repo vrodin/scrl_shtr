@@ -37,9 +37,7 @@ GameLogic::~GameLogic() {
 
     for (auto enemy : enemies) {
         if(auto *fighter = dynamic_cast<Fighter*>(enemy)) {
-            for(auto& bullet : fighter->getBullets()) {
-                delete bullet;
-            }
+            fighter->getBullets().clear();
         }
         delete enemy;
     }
@@ -112,7 +110,7 @@ void GameLogic::render() {
         fontRenderer->setProjectionMatrix(glm::ortho(0.0f, (float)width_, 0.0f, (float)height_ , -1.0f, 1.0f));
         for (auto &button: buttons) {
             button->render();
-            if( button->isPointInsideButton(glm::vec2(releaseX,releaseY))) {
+            if( button->isFlyEnd() && button->isPointInsideButton(glm::vec2(releaseX,releaseY))) {
                 button->exec();
                 releaseX = 0;
             }
@@ -136,7 +134,7 @@ void GameLogic::checkCollisions() {
 
         if(auto *fighter = dynamic_cast<Fighter*>(enemy)) {
             for (auto& bullet : fighter->getBullets()) {
-                if (isColliding(bullet, hero)) {
+                if (isColliding(bullet.get(), hero)) {
                     handlePlayerCollision();
                     break;
                 }
@@ -258,7 +256,7 @@ void GameLogic::resetButtons() {
 }
 
 bool GameLogic::terminateApp() {
-    exit(0);
+    exit(0); //потенциальный краш в аналитике что будет ронять рейтинг в апп сторе, то что ниже корректнее, но не работает
     //ANativeActivity_finish(reinterpret_cast<ANativeActivity *>(app_->activity));
     return 1;
 }
@@ -274,9 +272,7 @@ bool GameLogic::reset() {
     // Удаление всех врагов и пуль
     for (auto& enemy : enemies) {
         if(auto *fighter = dynamic_cast<Fighter*>(enemy)) {
-            for (auto& bullet : fighter->getBullets()) {
-                delete bullet;
-            }
+            fighter->getBullets().clear();
         }
         delete enemy;
     }

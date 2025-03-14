@@ -6,7 +6,7 @@
 
 Hero::Hero(glm::vec2 position, glm::vec2 size)
         : BaseObject(position, size, glm::vec2(0.0f)), health(1), fireCooldown(0.0f) {
-    fireInterval = 0.5f;
+    fireInterval = 1.0f;
 }
 
 void Hero::update(float deltaTime) {

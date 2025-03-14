@@ -5,7 +5,7 @@
 
 Fighter::Fighter(glm::vec2 position, glm::vec2 size, glm::vec2 velocity)
         : BaseObject(position, size, velocity), health(2), fireCooldown(0.0f) {
-    fireInterval = 2.0f;
+    fireInterval = 3.0f;
 }
 
 void Fighter::update(float deltaTime) {
@@ -40,7 +40,7 @@ void Fighter::fireBullet() {
     glm::vec2 bulletSize = glm::vec2(5, 10);
     glm::vec2 bulletVelocity = glm::vec2(0.0f, -200.0f);
 
-    auto bullet = new Bullet(bulletPosition, bulletSize, bulletVelocity);
+    auto bullet = std::make_shared<Bullet>(bulletPosition, bulletSize, bulletVelocity);
     bullet->setShader(shader);
     bullet->setModel(bulletModel);
     bullets.emplace_back(bullet);
@@ -53,6 +53,6 @@ void Fighter::takeDamage(int damage) {
     }
 }
 
-std::list<Bullet*>& Fighter::getBullets() {
+std::list<std::shared_ptr<Bullet>>& Fighter::getBullets() {
     return bullets;
 }

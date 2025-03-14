@@ -28,7 +28,6 @@ private:
     int health;
     float fireCooldown;
     float fireInterval;
-    bool shouldRemove;
     std::list<std::shared_ptr<Bullet>> bullets;
     Model* bulletModel;
 };

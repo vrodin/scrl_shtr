@@ -19,14 +19,13 @@ public:
     void takeDamage(int damage);
     void setBulletModel(Model* model) {bulletModel = model;}
 
-    std::list<Bullet*>& getBullets();
+    std::list<std::shared_ptr<Bullet>>& getBullets();
 
 private:
     int health;
     float fireCooldown;
     float fireInterval;
-    bool shouldRemove;
-    std::list<Bullet*> bullets;
+    std::list<std::shared_ptr<Bullet>> bullets;
     Model* bulletModel;
 };
 #endif //VRODIN_S_SCRL_SHTER_FIGHTER_H

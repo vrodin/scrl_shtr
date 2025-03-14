@@ -17,6 +17,5 @@ public:
 
 private:
     int health;
-    bool shouldRemove;
 };
 #endif //VRODIN_S_SCRL_SHTER_BOMBER_H

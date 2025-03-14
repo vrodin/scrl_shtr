@@ -12,10 +12,12 @@ Button::Button(glm::vec2 position, glm::vec2 size, glm::vec2 velocity)
 void Button::update(float deltaTime) {
 
     if(stopPosition == getPosition()) return;
+    flyEnd = false;
 
     glm::vec2 direction = stopPosition - getPosition();
 
-    if (glm::length(direction) < 1.0f) {
+    if (glm::length(direction) < 4.0f) {
+        flyEnd = true;
         setPosition(stopPosition);
         return;
     }

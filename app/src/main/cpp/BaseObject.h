@@ -42,7 +42,7 @@ protected:
     glm::vec2 position;
     glm::vec2 size;
     glm::vec2 velocity;
-    bool shouldRemove;
+    bool shouldRemove = false;
     Model* model;
     Shader* shader;
     bool immortal = false;
